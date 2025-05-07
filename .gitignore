@@ -31,3 +31,7 @@ cache/
 *.swp
 *.swo
 .DS_Store
+
+# 测试文件
+test/
+test/*
