@@ -35,3 +35,7 @@ cache/
 # 测试文件
 test/
 test/*
+
+# cursor rules
+.cursorrules
+.cursor/rules/*
