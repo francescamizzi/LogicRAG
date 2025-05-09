@@ -14,8 +14,9 @@ MAX_ROUNDS=5
 TOP_K=5
 EVAL_TOP_KS="5 10"
 LIMIT=50 # Number of questions to evaluate per dataset
-MODELS_TO_RUN_STR="vanilla agentic light" # Default model(s): vanilla, agentic, light (space-separated)
-TARGET_DATASETS_STR="" # Default: all datasets. Space separated e.g. "hotpotqa musique 2wikimultihopqa"
+MODELS_TO_RUN_STR="agentic" # Default model(s): vanilla, agentic, light (space-separated)
+TARGET_DATASETS_STR="2wikimultihopqa" # Default: all datasets. Space separated e.g. "hotpotqa musique 2wikimultihopqa"
+CHECKPOINT_INTERVAL=5 # Save checkpoint every 5 questions
 
 # Output directory for results
 RESULTS_DIR="result"
@@ -29,9 +30,10 @@ usage() {
     echo "  -h, --help               Show this help message"
     echo "  -m, --max-rounds NUM     Set maximum rounds (default: $MAX_ROUNDS)"
     echo "  -k, --top-k NUM          Set top-k contexts (default: $TOP_K)"
-    echo "  -l, --limit NUM          Set number of questions per dataset (default: $LIMIT)"
+    echo "  -l, --limit NUM          Set number of questions per dataset (default: $LIMIT, 0 for all questions)"
     echo "  -r, --model MODELS       Set RAG model(s) (space-separated: vanilla, agentic, light; default: "$MODELS_TO_RUN_STR")"
     echo "  -d, --datasets SETS      Set target dataset(s) (space-separated: hotpotqa, musique, 2wikimultihopqa; default: all)"
+    echo "  -c, --checkpoint NUM     Set checkpoint interval (questions) (default: $CHECKPOINT_INTERVAL)"
     echo ""
     exit 1
 }
@@ -62,6 +64,10 @@ while [[ $# -gt 0 ]]; do
             TARGET_DATASETS_STR="$2"
             shift 2
             ;;
+        -c|--checkpoint)
+            CHECKPOINT_INTERVAL="$2"
+            shift 2
+            ;;
         *)
             echo "Unknown option: $1"
             usage
@@ -73,6 +79,7 @@ echo -e "${GREEN}Starting Agentic-RAG evaluations...${NC}"
 echo -e "Models to run: $MODELS_TO_RUN_STR"
 echo -e "Target datasets: ${TARGET_DATASETS_STR:-All}"
 echo -e "Max rounds: $MAX_ROUNDS, Top-K: $TOP_K, Eval Top-Ks: $EVAL_TOP_KS, Questions per dataset: $LIMIT"
+echo -e "Checkpoint interval: $CHECKPOINT_INTERVAL questions"
 echo ""
 
 # Function to check if a dataset should be run
@@ -117,7 +124,8 @@ run_evaluation() {
         --top-k "$TOP_K" \
         --eval-top-ks $eval_top_ks_args \
         --limit "$LIMIT" \
-        --output "$output_filename"
+        --output "$output_filename" \
+        --checkpoint-interval "$CHECKPOINT_INTERVAL"
     
     echo -e "${GREEN}Evaluation complete for $dataset_name_log using model $MODEL${NC}"
     echo ""

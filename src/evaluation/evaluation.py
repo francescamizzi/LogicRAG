@@ -28,11 +28,15 @@ RAG_MODELS = {
     "light": LightAgenticRAG
 }
 
+# Directory for checkpoints
+CHECKPOINT_DIR = os.path.join(RESULT_DIR, "checkpoints")
+DEFAULT_CHECKPOINT_INTERVAL = 5  # Default: save checkpoint every 5 questions
+
 class RAGEvaluator:
     """Evaluator for RAG models."""
     
     def __init__(self, model_name: str, corpus_path: str, max_rounds: int = 3, top_k: int = 5, 
-                eval_top_ks: List[int] = [5, 10]):
+                eval_top_ks: List[int] = [5, 10], checkpoint_interval: int = DEFAULT_CHECKPOINT_INTERVAL):
         """Initialize the evaluator with corpus path and parameters.
         
         Args:
@@ -41,15 +45,20 @@ class RAGEvaluator:
             max_rounds: Maximum number of rounds for agentic RAG
             top_k: Number of contexts to retrieve
             eval_top_ks: List of k values for top-k accuracy evaluation
+            checkpoint_interval: Number of questions to process before saving checkpoint
         """
         self.model_name = model_name
         self.corpus_path = corpus_path
         self.max_rounds = max_rounds
         self.top_k = top_k
         self.eval_top_ks = sorted(eval_top_ks)  # Sort to ensure consistent processing
+        self.checkpoint_interval = checkpoint_interval
         
         # Create result directory if it doesn't exist
         os.makedirs(RESULT_DIR, exist_ok=True)
+        
+        # Create checkpoint directory if it doesn't exist
+        os.makedirs(CHECKPOINT_DIR, exist_ok=True)
         
         # Initialize the RAG model
         self._initialize_model()
@@ -143,36 +152,91 @@ class RAGEvaluator:
             
         return result
     
-    def run_single_model_evaluation(self, eval_data: List[Dict], output_file: str = "evaluation_results.json"):
-        """Run evaluation of a single model on the given evaluation data."""
-        results = []
-        
-        # Reset token costs for the current model evaluation
-        TOKEN_COST["prompt"] = 0
-        TOKEN_COST["completion"] = 0
-        
-        # Evaluation metrics
-        total_questions = len(eval_data)
-        
-        # Initialize metrics dictionary with dynamic top-k keys
-        metrics = {
-            "total_time": 0,
-            "answer_coverage": 0,
-            "answer_accuracy": 0,
-            "string_accuracy": 0,
-            "string_precision": 0,
-            "string_recall": 0
+    def _get_checkpoint_path(self, output_file: str) -> str:
+        """Generate a checkpoint path based on the output file."""
+        base_name = os.path.basename(output_file)
+        name, ext = os.path.splitext(base_name)
+        return os.path.join(CHECKPOINT_DIR, f"{name}_checkpoint{ext}")
+    
+    def _save_checkpoint(self, results: List[Dict], metrics: Dict, processed_count: int, output_file: str):
+        """Save a checkpoint of current evaluation progress."""
+        checkpoint = {
+            "model": self.model_name,
+            "metrics": metrics,
+            "results": results,
+            "processed_count": processed_count
         }
         
-        # Add top-k hits for each k in eval_top_ks
-        for k in self.eval_top_ks:
-            metrics[f"top{k}_hits"] = 0
+        checkpoint_path = self._get_checkpoint_path(output_file)
+        with open(checkpoint_path, 'w', encoding='utf-8') as f:
+            json.dump(checkpoint, f, ensure_ascii=False, indent=2)
+        logger.info(f"Checkpoint saved: {processed_count} questions processed")
+    
+    def _load_checkpoint(self, output_file: str) -> Tuple[List[Dict], Dict, int]:
+        """Load evaluation checkpoint if it exists."""
+        checkpoint_path = self._get_checkpoint_path(output_file)
         
-        # Add rounds tracking for agentic models
-        if self.model_name in ["agentic", "light"]:
-            metrics["total_rounds"] = 0
+        if not os.path.exists(checkpoint_path):
+            return [], {}, 0
         
-        for item in tqdm(eval_data, desc=f"Evaluating {self.model_name}"):
+        try:
+            with open(checkpoint_path, 'r', encoding='utf-8') as f:
+                checkpoint = json.load(f)
+            
+            logger.info(f"Loaded checkpoint: {checkpoint['processed_count']} questions already processed")
+            return checkpoint["results"], checkpoint["metrics"], checkpoint["processed_count"]
+        except Exception as e:
+            logger.error(f"Error loading checkpoint: {e}")
+            return [], {}, 0
+    
+    def run_single_model_evaluation(self, eval_data: List[Dict], output_file: str = "evaluation_results.json"):
+        """Run evaluation of a single model on the given evaluation data."""
+        # Try to load checkpoint
+        results, metrics, processed_count = self._load_checkpoint(output_file)
+        
+        # Skip already processed questions
+        if processed_count > 0:
+            eval_data = eval_data[processed_count:]
+            logger.info(f"Resuming from checkpoint: {processed_count} questions already processed, {len(eval_data)} remaining")
+        
+        # If all questions were already processed
+        if not eval_data:
+            logger.info("All questions were already processed in previous run.")
+            # Load full results from final output
+            output_path = os.path.join(RESULT_DIR, output_file)
+            if os.path.exists(output_path):
+                with open(output_path, 'r', encoding='utf-8') as f:
+                    evaluation_summary = json.load(f)
+                return evaluation_summary
+        
+        # If starting fresh, initialize metrics
+        if not metrics:
+            # Reset token costs for the current model evaluation
+            TOKEN_COST["prompt"] = 0
+            TOKEN_COST["completion"] = 0
+            
+            # Initialize metrics dictionary with dynamic top-k keys
+            metrics = {
+                "total_time": 0,
+                "answer_coverage": 0,
+                "answer_accuracy": 0,
+                "string_accuracy": 0,
+                "string_precision": 0,
+                "string_recall": 0
+            }
+            
+            # Add top-k hits for each k in eval_top_ks
+            for k in self.eval_top_ks:
+                metrics[f"top{k}_hits"] = 0
+            
+            # Add rounds tracking for agentic models
+            if self.model_name in ["agentic", "light"]:
+                metrics["total_rounds"] = 0
+        
+        # Evaluation metrics
+        total_questions = len(eval_data) + processed_count
+        
+        for i, item in enumerate(tqdm(eval_data, desc=f"Evaluating {self.model_name}")):
             question = item['question']
             gold_answer = item['answer']
             
@@ -197,12 +261,12 @@ class RAGEvaluator:
             metrics["string_recall"] += string_metrics["recall"]
             
             # Check retrieval coverage
-            for i, ctx in enumerate(result["contexts"]):
+            for j, ctx in enumerate(result["contexts"]):
                 if normalized_gold in normalize_answer(ctx):
                     metrics["answer_coverage"] += 1
                     # Update counters for each k value
                     for k in self.eval_top_ks:
-                        if i < k:
+                        if j < k:
                             metrics[f"top{k}_hits"] += 1
                     break
             
@@ -213,6 +277,11 @@ class RAGEvaluator:
             # Evaluate answer using LLM
             if result["is_correct"]:
                 metrics["answer_accuracy"] += 1
+            
+            # Save checkpoint at regular intervals
+            current_count = processed_count + i + 1
+            if (current_count % self.checkpoint_interval == 0) or (i == len(eval_data) - 1):
+                self._save_checkpoint(results, metrics, current_count, output_file)
         
         # Calculate average metrics
         avg_metrics = {

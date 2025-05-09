@@ -43,6 +43,7 @@ Options:
 - `--max-rounds`: Maximum number of agent retrieval rounds (default: 3)
 - `--top-k`: Number of top contexts to retrieve (default: 5)
 - `--limit`: Number of questions to evaluate (default: 20)
+    - Set to `0` to process all questions in the dataset
 
 ### Running a Single Question
 
@@ -52,18 +53,31 @@ python run.py --model MODEL_NAME --question "Your question here" --corpus path/t
 
 ### Using the Script
 
-For convenience, you can use the provided script to run evaluations with specific RAG models on all datasets:
-
 ```bash
-# Run evaluations with vanilla RAG on all datasets
+# Run all models on all datasets
 ./scripts/run.sh
 
-# Run evaluations with LightAgenticRAG on all datasets 
-./scripts/run.sh --model light
+# Run a specific model on specific datasets
+./scripts/run.sh --model "agentic" --datasets "hotpotqa musique"
+
+# Process all questions (not just 50)
+./scripts/run.sh --limit 0
+
+# Run with custom checkpoint interval
+./scripts/run.sh --checkpoint 10
 ```
 
+Options:
+- `--model`: Models to run (vanilla, agentic, light; default: all)
+- `--datasets`: Datasets to evaluate (hotpotqa, musique, 2wikimultihopqa; default: all)
+- `--max-rounds`: Maximum agent rounds (default: 5)
+- `--top-k`: Contexts to retrieve each round (default: 5)
+- `--limit`: Questions per dataset (default: 50, 0 for all)
+- `--checkpoint`: Questions to process before saving checkpoint (default: 5)
 
+The script automatically saves checkpoints at regular intervals and resumes from the last checkpoint if interrupted.
 
+For details, see the [Usage Guide](docs/usage_guide.md).
 
 ## Components
 

@@ -56,6 +56,10 @@ def parse_arguments():
     parser.add_argument('--output', type=str, default='evaluation_results.json',
                       help='Output file name')
     
+    # Checkpoint options
+    parser.add_argument('--checkpoint-interval', type=int, default=5,
+                      help='Number of questions to process before saving a checkpoint (default: 5)')
+    
     return parser.parse_args()
 
 def load_evaluation_data(dataset_path: str, limit: int) -> List[Dict]:
@@ -146,6 +150,7 @@ def main():
     logger.info(f"Starting evaluation of {args.model} RAG model")
     logger.info(f"Max rounds: {args.max_rounds}, Top-k: {args.top_k}")
     logger.info(f"Evaluating top-k accuracy for k values: {args.eval_top_ks}")
+    logger.info(f"Checkpoint interval: {args.checkpoint_interval} questions")
     
     # Load evaluation data
     eval_data = load_evaluation_data(args.dataset, args.limit)
@@ -161,7 +166,8 @@ def main():
         corpus_path=args.corpus,
         max_rounds=args.max_rounds,
         top_k=args.top_k,
-        eval_top_ks=args.eval_top_ks
+        eval_top_ks=args.eval_top_ks,
+        checkpoint_interval=args.checkpoint_interval
     )
     
     # Run evaluation
