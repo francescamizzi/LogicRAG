@@ -1,4 +1,6 @@
 import logging
+import pdb
+import torch
 import time
 from typing import Dict, List, Tuple, Any
 import json
@@ -12,20 +14,16 @@ from src.utils.utils import (
     save_results,
     TOKEN_COST
 )
-from src.models.vanilla_rag import VanillaRAG
-from src.models.agentic_rag import AgenticRAG
-from src.models.light_agentic_rag import LightAgenticRAG
+from src.models.logic_rag import LogicRAG
 from config.config import RESULT_DIR
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 # Dictionary of available RAG models
 RAG_MODELS = {
-    "vanilla": VanillaRAG,
-    "agentic": AgenticRAG,
-    "light": LightAgenticRAG
+    "logic-rag": LogicRAG,
 }
 
 # Directory for checkpoints
@@ -86,38 +84,27 @@ class RAGEvaluator:
         # Run the model on the question
         start_time = time.time()
         
-        # Handle different return signatures
-        if self.model_name in ["agentic", "light"]:
-            answer, contexts, rounds = self.model.answer_question(question)
-            elapsed_time = time.time() - start_time
-            
-            # Evaluate answer with LLM
-            is_correct = evaluate_with_llm(answer, gold_answer)
-            
-            return {
-                "question": question,
-                "gold_answer": gold_answer,
-                "answer": answer,
-                "contexts": contexts,
-                "time": elapsed_time,
-                "rounds": rounds,
-                "is_correct": is_correct
-            }
-        else:
-            answer, contexts = self.model.answer_question(question)
-            elapsed_time = time.time() - start_time
-            
-            # Evaluate answer with LLM
-            is_correct = evaluate_with_llm(answer, gold_answer)
-            
-            return {
-                "question": question,
-                "gold_answer": gold_answer,
-                "answer": answer,
-                "contexts": contexts,
-                "time": elapsed_time,
-                "is_correct": is_correct
-            }
+        answer, contexts, rounds = self.model.answer_question(question)
+        elapsed_time = time.time() - start_time
+        
+        # Evaluate answer with LLM
+        is_correct = evaluate_with_llm(answer, gold_answer)
+        
+        result = {
+            "question": question,
+            "gold_answer": gold_answer,
+            "answer": answer,
+            "contexts": contexts,
+            "time": elapsed_time,
+            "rounds": rounds,
+            "is_correct": is_correct
+        }
+        
+        # Add dependency analysis for interpretable models
+        if hasattr(self.model, 'last_dependency_analysis'):
+            result["dependency_analysis"] = self.model.last_dependency_analysis
+        
+        return result
         
     def calculate_retrieval_metrics(self, retrieved_contexts: List[List[str]], answers: List[str]) -> Dict[str, float]:
         """Calculate retrieval-based metrics."""
@@ -160,6 +147,13 @@ class RAGEvaluator:
     
     def _save_checkpoint(self, results: List[Dict], metrics: Dict, processed_count: int, output_file: str):
         """Save a checkpoint of current evaluation progress."""
+
+        # If the last "answer" is empty in the results, it indicates that we have lost connection to the LLM API
+        # We should not save the checkpoint in this case, and we should terminate the whole pipeline
+        if results[-1]["answer"] == "":
+            print("\n\n\033[91mLost connection to the LLM API, skipping checkpoint save\033[0m\n\n")
+            exit(1)  # Use exit code 1 to indicate error condition
+
         checkpoint = {
             "model": self.model_name,
             "metrics": metrics,
@@ -172,6 +166,7 @@ class RAGEvaluator:
         }
         
         checkpoint_path = self._get_checkpoint_path(output_file)
+        
         with open(checkpoint_path, 'w', encoding='utf-8') as f:
             json.dump(checkpoint, f, ensure_ascii=False, indent=2)
         logger.info(f"Checkpoint saved: {processed_count} questions processed")
@@ -239,9 +234,8 @@ class RAGEvaluator:
             for k in self.eval_top_ks:
                 metrics[f"top{k}_hits"] = 0
             
-            # Add rounds tracking for agentic models
-            if self.model_name in ["agentic", "light"]:
-                metrics["total_rounds"] = 0
+            # Add rounds tracking
+            metrics["total_rounds"] = 0
         else:
             logger.info(f"Restored token costs - Prompt: {TOKEN_COST['prompt']}, Completion: {TOKEN_COST['completion']}")
         
@@ -282,8 +276,8 @@ class RAGEvaluator:
                             metrics[f"top{k}_hits"] += 1
                     break
             
-            # Update rounds for agentic models
-            if self.model_name in ["agentic", "light"] and "rounds" in result:
+            # Update rounds
+            if "rounds" in result:
                 metrics["total_rounds"] += result["rounds"]
             
             # Evaluate answer using LLM
@@ -309,9 +303,8 @@ class RAGEvaluator:
         for k in self.eval_top_ks:
             avg_metrics[f"top{k}_coverage"] = metrics[f"top{k}_hits"] / total_questions * 100
         
-        # Add average rounds for agentic models
-        if self.model_name in ["agentic", "light"]:
-            avg_metrics["avg_rounds"] = metrics["total_rounds"] / total_questions
+        # Add average rounds
+        avg_metrics["avg_rounds"] = metrics["total_rounds"] / total_questions
         
         # Organize metrics by category
         organized_metrics = {
@@ -331,9 +324,8 @@ class RAGEvaluator:
             }
         }
         
-        # Add rounds for agentic models
-        if self.model_name in ["agentic", "light"]:
-            organized_metrics["performance"]["avg_rounds"] = avg_metrics["avg_rounds"]
+        # Add rounds
+        organized_metrics["performance"]["avg_rounds"] = avg_metrics["avg_rounds"]
         
         # Add token cost metrics
         if total_questions > 0:
@@ -370,11 +362,8 @@ class RAGEvaluator:
         logger.info(f"\nEvaluation Summary for {self.model_name}:")
         
         # Performance metrics
-        if self.model_name in ["agentic", "light"]:
-            logger.info(f"Average time per question: {avg_metrics['avg_time']:.2f} seconds")
-            logger.info(f"Average rounds per question: {avg_metrics['avg_rounds']:.2f}")
-        else:
-            logger.info(f"Average time per question: {avg_metrics['avg_time']:.2f} seconds")
+        logger.info(f"Average time per question: {avg_metrics['avg_time']:.2f} seconds")
+        logger.info(f"Average rounds per question: {avg_metrics['avg_rounds']:.2f}")
         
         # Log token costs
         logger.info(f"Average prompt tokens per question: {organized_metrics['performance']['avg_prompt_tokens']:.2f}")
@@ -399,4 +388,4 @@ class RAGEvaluator:
         for k in self.eval_top_ks:
             logger.info(f"  • Top-{k} Coverage: {avg_metrics[f'top{k}_coverage']:.2f}%")
         
-        return evaluation_summary 
+        return evaluation_summary

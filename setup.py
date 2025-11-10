@@ -4,7 +4,7 @@ setup(
     name="agentic-rag",
     version="0.1.0",
     description="Agentic Retrieval-Augmented Generation with iterative retrieval",
-    author="Your Name",
+    author="Anonymous",
     packages=find_packages(),
     install_requires=[
         "torch",

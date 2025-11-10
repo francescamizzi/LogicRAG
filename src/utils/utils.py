@@ -23,7 +23,7 @@ from config.config import (
 init()
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 # Initialize token cost tracking
@@ -55,7 +55,7 @@ Format your response as:
     max_tries=MAX_RETRIES,
     max_time=300
 )
-def get_response_with_retry(prompt: str, temperature: float = 0.0) -> str:
+def get_response_with_retry(prompt: str, temperature: float = 0.0, print_cost: bool = False) -> str:
     """Get response from OpenAI API with retry logic."""
     global TOKEN_COST
     try:
@@ -73,7 +73,10 @@ def get_response_with_retry(prompt: str, temperature: float = 0.0) -> str:
         if response.usage:
             TOKEN_COST["prompt"] += response.usage.prompt_tokens
             TOKEN_COST["completion"] += response.usage.completion_tokens
-            
+        if print_cost:
+            logger.info(f"Prompt tokens: {response.usage.prompt_tokens}")
+            logger.info(f"Completion tokens: {response.usage.completion_tokens}")
+            logger.info(f"Total tokens: {response.usage.total_tokens}")
         return response.choices[0].message.content.strip()
     except Exception as e:
         logger.error(f"Error in get_response_with_retry: {str(e)}")
@@ -184,7 +187,7 @@ Respond with ONLY 'correct' or 'incorrect'.
 Response:"""
 
     try:
-        response = get_response_with_retry(prompt, temperature=0.0)
+        response = get_response_with_retry(prompt, temperature=0.0, print_cost=True)
         return response.strip().lower() == "correct"
     except Exception as e:
         logger.error(f"Error in LLM evaluation: {e}")

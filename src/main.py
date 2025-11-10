@@ -7,20 +7,19 @@ from typing import Dict, List, Type
 
 from src.evaluation.evaluation import RAGEvaluator
 from src.models.base_rag import BaseRAG
-from src.models.vanilla_rag import VanillaRAG
-from src.models.agentic_rag import AgenticRAG
-from src.models.light_agentic_rag import LightAgenticRAG
+from src.models.logic_rag import LogicRAG
+
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, 
+logging.basicConfig(level=logging.WARNING, 
                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+
 logger = logging.getLogger(__name__)
 
 # Dictionary of available RAG models
 RAG_MODELS = {
-    "vanilla": VanillaRAG,
-    "agentic": AgenticRAG,
-    "light": LightAgenticRAG
+    "logic-rag": LogicRAG,
 }
 
 def parse_arguments():
@@ -49,7 +48,7 @@ def parse_arguments():
     
     # RAG model selection
     parser.add_argument('--model', type=str, choices=list(RAG_MODELS.keys()), 
-                      default='vanilla',
+                      default='logic-rag',
                       help='Which RAG model to use')
     
     # Evaluation options
@@ -115,14 +114,9 @@ def run_single_question(model_name: str, question: str, corpus_path: str, max_ro
     logger.info(f"\nQuestion: {question}")
     logger.info(f"Using {model_name} RAG model")
     
-    # Handle different return signatures
-    if model_name in ["agentic", "light"]:
-        answer, contexts, rounds = model.answer_question(question)
-        logger.info(f"\nAnswer: {answer}")
-        logger.info(f"Retrieved in {rounds} rounds")
-    else:
-        answer, contexts = model.answer_question(question)
-        logger.info(f"\nAnswer: {answer}")
+    answer, contexts, rounds = model.answer_question(question)
+    logger.info(f"\nAnswer: {answer}")
+    logger.info(f"Retrieved in {rounds} rounds")
     
     # Log contexts
     logger.info("\nContexts used:")
@@ -179,4 +173,4 @@ def main():
     logger.info("Evaluation complete!")
 
 if __name__ == "__main__":
-    main() 
+    main()

@@ -1,6 +1,7 @@
 import os
 import gc
 import json
+import pdb
 import pickle
 import torch
 import logging
@@ -16,7 +17,7 @@ from config.config import (
 )
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 class BaseRAG:
@@ -46,7 +47,7 @@ class BaseRAG:
         
         # Process documents into chunks
         self.corpus = {
-            i: f"title: {doc['title']} content: {doc['text']}"
+            i: f"Title: {doc['title']}. Content: {doc['text']}"
             for i, doc in enumerate(documents)
         }
         
@@ -133,6 +134,7 @@ class BaseRAG:
         # Check cache first
         if query in self.retrieval_cache:
             return self.retrieval_cache[query]
+        # pdb.set_trace()
 
         if self.corpus_embeddings is None or not self.corpus:
             return []

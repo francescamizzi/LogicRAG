@@ -1,19 +1,18 @@
-# Agentic RAG
-
+# LogicRAG: Graph-based Agentic RAG
 <div align="center">
     <a href="http://makeapullrequest.com"><img src="https://img.shields.io/badge/PRs-welcome-green.svg"/></a>
-    <a href="https://github.com/chensyCN/Agentic-RAG/stargazers"><img src="https://img.shields.io/github/stars/chensyCN/Agentic-RAG"/></a>
-    <a href="https://github.com/chensyCN/Agentic-RAG/network/members"><img src="https://img.shields.io/github/forks/chensyCN/Agentic-RAG"/></a>
-    <a href="https://github.com/chensyCN/Agentic-RAG/commits"><img src="https://img.shields.io/github/last-commit/chensyCN/Agentic-RAG?color=blue"/></a>
+      <a href="http://makeapullrequest.com"><img src="https://img.shields.io/github/last-commit/chensyCN/Agentic-RAG?color=blue"/></a>
+      <a href="https://arxiv.org/abs/2508.06105"><img src="https://img.shields.io/badge/paper-available-brightgreen"/></a>
 </div>
+LogicRAG constructs query logic dependency graphs to guide structured retrieval adaptively, enabling test-time scaling of graphRAG on large/dynamic corpora. This work has been accepted to [AAAI'26](https://openreview.net/forum?id=ov1bwU35Mf)
 
 
-A modular and extensible system of Retrieval-Augmented Generation (RAG) - with vanilla RAG and some prototype agentic RAG algorithms. Our key features include:
+## Key Features
 
-- **Research Prototype** - A minimal viable implementation for experimentation and academic exploration
-- **Modular Architecture** - Clean, decoupled codebase designed for easy customization and extension
-- **Extensible** - Easily add new RAG algorithms to the framework
-
+- **Logic Dependency Analysis** - Convert complex questions into logical dependency graphs for reasoning-aware retrieval.
+- **Graph Reasoning Linearization** - Linearize complex graph reasoning into sequential subproblem solution while maintaining logic-coherence.
+- **Efficiency** - Efficient schedualing via graph pruning, and context-length optimization via rolling memory.
+- **Interpretable Results** - Provides clear reasoning paths and dependency analysis for better explainability
 
 ## Installation and Configuration
 
@@ -29,18 +28,16 @@ OPENAI_API_KEY=your_api_key_here
 
 - Other configuration options can be modified in `config/config.py`
 
-
-## Quick start
+## Quick Start
 
 ### Running Evaluation on a Dataset
 
-
 ```bash
-python run.py --model MODEL_NAME --dataset path/to/dataset.json --corpus path/to/corpus.json
+python run.py --model logic-rag --dataset path/to/dataset.json --corpus path/to/corpus.json --max-rounds 5 --top-k 3
 ```
 
 Options:
-- `--max-rounds`: Maximum number of agent retrieval rounds (default: 3)
+- `--max-rounds`: Maximum number of reasoning rounds (default: 3)
 - `--top-k`: Number of top contexts to retrieve (default: 5)
 - `--limit`: Number of questions to evaluate (default: 20)
     - Set to `0` to process all questions in the dataset
@@ -48,89 +45,45 @@ Options:
 ### Running a Single Question
 
 ```bash
-python run.py --model MODEL_NAME --question "Your question here" --corpus path/to/corpus.json
+python run.py --model logic-rag --question "Your question here" --corpus path/to/corpus.json --max-rounds 5 --top-k 3
 ```
-
-### Using the Script
-
-```bash
-# Run all models on all datasets
-./scripts/run.sh
-
-# Run a specific model on specific datasets
-./scripts/run.sh --model "agentic" --datasets "hotpotqa musique"
-
-# Process all questions (not just 50)
-./scripts/run.sh --limit 0
-
-# Run with custom checkpoint interval
-./scripts/run.sh --checkpoint 10
-```
-
-Options:
-- `--model`: Models to run (vanilla, agentic, light; default: all)
-- `--datasets`: Datasets to evaluate (hotpotqa, musique, 2wikimultihopqa; default: all)
-- `--max-rounds`: Maximum agent rounds (default: 5)
-- `--top-k`: Contexts to retrieve each round (default: 5)
-- `--limit`: Questions per dataset (default: 50, 0 for all)
-- `--checkpoint`: Questions to process before saving checkpoint (default: 5)
-
-The script automatically saves checkpoints at regular intervals and resumes from the last checkpoint if interrupted.
-
-For details, see the [Usage Guide](docs/usage_guide.md).
 
 ## Components
 
 | Component | Features/Description |
 |-----------|---------------------|
 | **BaseRAG** | • Loading and processing document corpus<br>• Computing and caching document embeddings<br>• Basic retrieval functionality |
-| **VanillaRAG** | • Single retrieval step for relevant contexts<br>• Direct answer generation from retrieved contexts |
-| **AgenticRAG** | • Multiple retrieval rounds with iterative refinement<br>• Reflection on retrieved information to identify missing details<br>• Generation of focused sub-queries for additional retrieval |
-| **LightAgenticRAG** | • Memory-efficient implementation of AgenticRAG<br>• Optimized for running on systems with limited resources |
+| **LogicRAG** | • Logic-based retrieval with explicit dependency analysis<br>• Transparent 3-step reasoning process for better explainability<br>• Enhanced debugging and analysis capabilities |
 | **Evaluation** | • Answer accuracy (LLM evaluated)<br>• Retrieval metrics<br>• Performance efficiency<br>• String-based evaluation metrics |
 
-## Adding a New RAG Model
 
-To add a new RAG algorithm:
-
-1. Create a new class that extends `BaseRAG` in the `src/models` directory
-2. Implement the required methods (`answer_question` at minimum)
-3. Add your model to the `RAG_MODELS` dictionary in `src/main.py`
-
-```python
-# Example of a new RAG model
-from src.models.base_rag import BaseRAG
-
-class MyNewRAG(BaseRAG):
-    def answer_question(self, question: str):
-        # Implementation here
-        return answer, contexts
-```
 
 ## Example Usage
 
 ```python
-from src.models.agentic_rag import AgenticRAG
+from src.models.logic_rag import LogicRAG
 
 # Initialize RAG system
-rag = AgenticRAG('path/to/corpus.json')
-rag.set_max_rounds(3)
-rag.set_top_k(5)
+rag = LogicRAG('path/to/corpus.json')
+rag.set_max_rounds(5)
+rag.set_top_k(3)
 
 # Ask a question
 answer, contexts, rounds = rag.answer_question("What is the capital of France?")
 print(f"Answer: {answer}")
 print(f"Retrieved in {rounds} rounds")
-``` 
+```
 
 ## Citation
-If you find this work helpful, please cite our recent paper:
+
+If you find this work helpful, please cite our paper:
 
 ```
-@article{zhang2025survey,
-  title={A Survey of Graph Retrieval-Augmented Generation for Customized Large Language Models},
-  author={Zhang, Qinggang and Chen, Shengyuan and Bei, Yuanchen and Yuan, Zheng and Zhou, Huachi and Hong, Zijin and Dong, Junnan and Chen, Hao and Chang, Yi and Huang, Xiao},
-  journal={arXiv preprint arXiv:2501.13958},
-  year={2025}
+@inproceedings{LogicRAG_AAAI26,
+title={You Don't Need Pre-built Graphs for {RAG}: Retrieval Augmented Generation with Adaptive Reasoning Structures},
+author={Anonymous},
+booktitle={The Fortieth AAAI Conference on Artificial Intelligence},
+year={2025},
+url={https://openreview.net/forum?id=ov1bwU35Mf}
 }
 ```
