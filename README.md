@@ -12,7 +12,7 @@ LogicRAG constructs query logic dependency graphs to guide structured retrieval 
 
 ## 🌟 Key Features
 
-- **❶ Logic Dependency Analysis** - Convert complex questions into logical dependency graphs for reasoning-aware retrieval.
+- **❶ Logic Dependency Analysis** - Convert complex questions into logical dependency graphs for planning multi-step retrieval.
 - **❷ Graph Reasoning Linearization** - Linearize complex graph reasoning into sequential subproblem solution while maintaining logic-coherence.
 - **❸ Efficiency** - Efficient schedualing via graph pruning, and context-length optimization via rolling memory.
 - **❹ Interpretable Results** - Provides clear reasoning paths and dependency analysis for better explainability.
