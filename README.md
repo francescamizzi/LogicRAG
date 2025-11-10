@@ -5,7 +5,7 @@
       <a href="https://arxiv.org/abs/2508.06105"><img src="https://img.shields.io/badge/paper-available-brightgreen"/></a>
 </div>
 
-LogicRAG constructs query logic dependency graphs to guide structured retrieval adaptively, enabling test-time scaling of graphRAG on large/dynamic corpora. This work has been accepted to [AAAI'26](https://openreview.net/forum?id=ov1bwU35Mf)
+LogicRAG constructs query logic dependency graphs to guide structured retrieval adaptively, enabling test-time scaling of graphRAG on large/dynamic corpora. This work has been accepted to [AAAI'26](https://openreview.net/forum?id=ov1bwU35Mf).
 
 
 ![System Architecture](figs/framework.png)
@@ -15,7 +15,7 @@ LogicRAG constructs query logic dependency graphs to guide structured retrieval 
 - **❶ Logic Dependency Analysis** - Convert complex questions into logical dependency graphs for reasoning-aware retrieval.
 - **❷ Graph Reasoning Linearization** - Linearize complex graph reasoning into sequential subproblem solution while maintaining logic-coherence.
 - **❸ Efficiency** - Efficient schedualing via graph pruning, and context-length optimization via rolling memory.
-- **❹ Interpretable Results** - Provides clear reasoning paths and dependency analysis for better explainability
+- **❹ Interpretable Results** - Provides clear reasoning paths and dependency analysis for better explainability.
 
 
 ## 🚀 Quick Start
@@ -78,7 +78,8 @@ If you find this work helpful, please cite our paper:
 ```
 @inproceedings{LogicRAG_AAAI26,
 title={You Don't Need Pre-built Graphs for {RAG}: Retrieval Augmented Generation with Adaptive Reasoning Structures},
-author={Anonymous},
+author={Shengyuan Chen, Chuang Zhou, Zheng Yuan, Qinggang Zhang, Zeyang Cui, Hao Chen, Yilin
+Xiao, Jiannong Cao, Xiao Huang},
 booktitle={The Fortieth AAAI Conference on Artificial Intelligence},
 year={2025},
 url={https://openreview.net/forum?id=ov1bwU35Mf}
