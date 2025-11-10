@@ -4,17 +4,23 @@
       <a href="http://makeapullrequest.com"><img src="https://img.shields.io/github/last-commit/chensyCN/Agentic-RAG?color=blue"/></a>
       <a href="https://arxiv.org/abs/2508.06105"><img src="https://img.shields.io/badge/paper-available-brightgreen"/></a>
 </div>
+
 LogicRAG constructs query logic dependency graphs to guide structured retrieval adaptively, enabling test-time scaling of graphRAG on large/dynamic corpora. This work has been accepted to [AAAI'26](https://openreview.net/forum?id=ov1bwU35Mf)
 
 
-## Key Features
+![System Architecture](figs/framework.png)
 
-- **Logic Dependency Analysis** - Convert complex questions into logical dependency graphs for reasoning-aware retrieval.
-- **Graph Reasoning Linearization** - Linearize complex graph reasoning into sequential subproblem solution while maintaining logic-coherence.
-- **Efficiency** - Efficient schedualing via graph pruning, and context-length optimization via rolling memory.
-- **Interpretable Results** - Provides clear reasoning paths and dependency analysis for better explainability
+## 🌟 Key Features
 
-## Installation and Configuration
+- **❶ Logic Dependency Analysis** - Convert complex questions into logical dependency graphs for reasoning-aware retrieval.
+- **❷ Graph Reasoning Linearization** - Linearize complex graph reasoning into sequential subproblem solution while maintaining logic-coherence.
+- **❸ Efficiency** - Efficient schedualing via graph pruning, and context-length optimization via rolling memory.
+- **❹ Interpretable Results** - Provides clear reasoning paths and dependency analysis for better explainability
+
+
+## 🚀 Quick Start
+
+### Installation and Configuration
 
 - Install dependencies:
 ```bash
@@ -28,7 +34,6 @@ OPENAI_API_KEY=your_api_key_here
 
 - Other configuration options can be modified in `config/config.py`
 
-## Quick Start
 
 ### Running Evaluation on a Dataset
 
@@ -48,17 +53,9 @@ Options:
 python run.py --model logic-rag --question "Your question here" --corpus path/to/corpus.json --max-rounds 5 --top-k 3
 ```
 
-## Components
-
-| Component | Features/Description |
-|-----------|---------------------|
-| **BaseRAG** | • Loading and processing document corpus<br>• Computing and caching document embeddings<br>• Basic retrieval functionality |
-| **LogicRAG** | • Logic-based retrieval with explicit dependency analysis<br>• Transparent 3-step reasoning process for better explainability<br>• Enhanced debugging and analysis capabilities |
-| **Evaluation** | • Answer accuracy (LLM evaluated)<br>• Retrieval metrics<br>• Performance efficiency<br>• String-based evaluation metrics |
 
 
-
-## Example Usage
+###  Example Usage
 
 ```python
 from src.models.logic_rag import LogicRAG
@@ -74,7 +71,7 @@ print(f"Answer: {answer}")
 print(f"Retrieved in {rounds} rounds")
 ```
 
-## Citation
+## 🍀 Citation
 
 If you find this work helpful, please cite our paper:
 
