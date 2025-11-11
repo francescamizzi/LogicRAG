@@ -1,4 +1,4 @@
-# [AAAI'26] LogicRAG: A Graph-based Agentic RAG framework
+# LogicRAG: Structured RAG Guided by Query Logic Dependency Graph
 <div align="center">
     <a href="http://makeapullrequest.com"><img src="https://img.shields.io/badge/PRs-welcome-green.svg"/></a>
       <a href="http://makeapullrequest.com"><img src="https://img.shields.io/github/last-commit/chensyCN/Agentic-RAG?color=blue"/></a>
