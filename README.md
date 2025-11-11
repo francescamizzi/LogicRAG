@@ -76,12 +76,11 @@ print(f"Retrieved in {rounds} rounds")
 If you find this work helpful, please cite our paper:
 
 ```
-@inproceedings{LogicRAG_AAAI26,
+@inproceedings{logicrag,
 title={You Don't Need Pre-built Graphs for {RAG}: Retrieval Augmented Generation with Adaptive Reasoning Structures},
-author={Shengyuan Chen, Chuang Zhou, Zheng Yuan, Qinggang Zhang, Zeyang Cui, Hao Chen, Yilin
-Xiao, Jiannong Cao, Xiao Huang},
+author={Shengyuan Chen and Chuang Zhou and Zheng Yuan and Qinggang Zhang and Zeyang Cui and Hao Chen and Yilin
+Xiao and Jiannong Cao and Xiao Huang},
 booktitle={The Fortieth AAAI Conference on Artificial Intelligence},
-year={2025},
-url={https://openreview.net/forum?id=ov1bwU35Mf}
+year={2025}
 }
 ```
