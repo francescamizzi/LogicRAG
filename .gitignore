@@ -1,41 +1,11 @@
-# Python缓存文件
-__pycache__/
-*/__pycache__/
-*/*/__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
 
-# 虚拟环境
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# 项目特定目录
+# Project-specific directory
 result/
-cache/
 
-# 环境变量
+# Environment variables
 .env
-.env.*
 
-# 敏感配置备份
-*config_backup*
-
-# 编辑器和IDE文件
+# Editor and Cache files
 .vscode/
-.idea/
-*.swp
-*.swo
 .DS_Store
-
-# 测试文件
-test/
-test/*
-
-# cursor rules
-.cursorrules
-.cursor/rules/*
+__pycache__/
