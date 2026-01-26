@@ -15,6 +15,7 @@ from src.utils.utils import (
     TOKEN_COST
 )
 from src.models.logic_rag import LogicRAG
+from src.models.logic_rag_pruned import LogicRAGPruned
 from config.config import RESULT_DIR
 
 # Configure logging
@@ -24,6 +25,7 @@ logger = logging.getLogger(__name__)
 # Dictionary of available RAG models
 RAG_MODELS = {
     "logic-rag": LogicRAG,
+    "logic-rag-pruned": LogicRAGPruned,
 }
 
 # Directory for checkpoints
