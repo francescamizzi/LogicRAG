@@ -33,7 +33,7 @@ def parse_arguments():
                       help='Path to the dataset file')
     parser.add_argument('--corpus', type=str, default='dataset/hotpotqa_corpus.json',
                       help='Path to the corpus file')
-    parser.add_argument('--limit', type=int, default=20,
+    parser.add_argument('--limit', type=int, default=100,
                       help='Number of questions to evaluate (default: 20)')
     
     # RAG configuration
@@ -54,7 +54,7 @@ def parse_arguments():
                       help='Which RAG model to use')
     
     # Evaluation options
-    parser.add_argument('--output', type=str, default='evaluation_results_selective_pruning_0.2.json',
+    parser.add_argument('--output', type=str, default='evaluation_results_selective_pruning_0.8_100_limit.json',
                       help='Output file name')
     
     # Checkpoint options

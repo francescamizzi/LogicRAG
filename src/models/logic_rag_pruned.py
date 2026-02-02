@@ -19,7 +19,7 @@ class LogicRAGPruned(LogicRAG):
         corpus_path: str = None,
         cache_dir: str = "./cache",
         filter_repeats: bool = False,
-        prune_ratio: float = 0.2,
+        prune_ratio: float = 0.8,
         min_dependencies: int = 1,
     ):
         super().__init__(corpus_path, cache_dir, filter_repeats)
